@@ -1253,14 +1253,11 @@ void ESP_WiFiManager::handleWifi()
   page += FPSTR(WM_HTTP_FORM_START);
 
 
-  page += "<br/>";
-  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
-  page += "<input type=\"checkbox\" id=\"enableSwitch2\" name=\"enableSwitch2\"";
-  if (staticIpEnabled) {
-      page += " checked";
-  }
-  page += ">";
-  page += "<br/>";
+  int eeprom_read;
+  EEPROM.get(0, eeprom_read);
+
+
+
 
 
   
@@ -1278,6 +1275,20 @@ void ESP_WiFiManager::handleWifi()
   char parLength[2];
 
   page += FPSTR(WM_FLDSET_START);
+
+  page += "<br/>";
+  page += "<small>Power Cycle after changing DHCP/Static IP Setting</small>";
+  page += "<br/>";
+  page += "<br/>";
+  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
+  page += "<input type=\"checkbox\" id=\"enableSwitch2\" name=\"enableSwitch2\"";
+  
+  if (eeprom_read == 0) {
+      page += " checked";
+  }
+  page += ">";
+  page += "<br/>";
+  page += "<br/>";
 
   // add the extra parameters to the form
   for (int i = 0; i < _paramsCount; i++)
@@ -1410,15 +1421,7 @@ void ESP_WiFiManager::handleWifi()
 
 
 
-  LOGDEBUG(F("SIDEWAYS TEST 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
-  page += "<br/>";
-  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
-  page += "<input type=\"checkbox\" id=\"enableSwitch3\" name=\"enableSwitch3\"";
-  if (staticIpEnabled) {
-      page += " checked";
-  }
-  page += ">";
-  page += "<br/>";
+
 
   page += FPSTR(WM_HTTP_SCRIPT_NTP_HIDDEN);
 
