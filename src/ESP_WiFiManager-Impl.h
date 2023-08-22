@@ -36,7 +36,7 @@
 
 #ifndef ESP_WiFiManager_Impl_h
 #define ESP_WiFiManager_Impl_h
-
+#include <ESP_EEPROM.h>
 //////////////////////////////////////////
 
 ESP_WMParameter::ESP_WMParameter(const char *custom)
@@ -1134,12 +1134,29 @@ void ESP_WiFiManager::handleRoot()
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //////////////////////////////////////////
 
 /** Wifi config page handler */
 void ESP_WiFiManager::handleWifi()
 {
   LOGDEBUG(F("Handle WiFi"));
+  LOGDEBUG(F("SIDEWAYS TEST <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
 
   // Disable _configPortalTimeout when someone accessing Portal to give some time to config
   _configPortalTimeout = 0;   //KH
@@ -1221,7 +1238,50 @@ void ESP_WiFiManager::handleWifi()
 
   page += "<small>*Hint: To reuse the saved WiFi credentials, leave SSID and PWD fields empty</small>";
 
+
+
+
+
+
+  // I WANT THE SWTCHE HERE
+  page += "<br/>";
+  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
+  page += F("<input type=\"checkbox\" id=\"enableSwitch\" name=\"enableSwitch\">");
+  page += "<br/>";
+
+
+
+
+
+
   page += FPSTR(WM_HTTP_FORM_START);
+
+
+  LOGDEBUG(F("SIDEWAYS TEST 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
+
+  if (server->hasArg("enableSwitch")) {
+      bool enableFeature = server->arg("enableSwitch") == "on"; // Check if the switch is turned on
+      if (enableFeature) {
+          LOGDEBUG(F("ON <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
+          Serial.println("SWTICH ON");
+            EEPROM.put(0, 1);
+            EEPROM.commit(); // Save changes to EEPROM
+          // Code to execute when the switch is turned on
+          // For example, you can set a flag or perform an action
+      } else {
+          LOGDEBUG(F("OFF <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
+          Serial.println("SWTICH OFF");
+          EEPROM.put(0, 0);
+          EEPROM.commit(); // Save changes to EEPROM
+          // Code to execute when the switch is turned off
+      }
+  }
+
+
+
+  
+
+  
 
 #if DISPLAY_STORED_CREDENTIALS_IN_CP
   // Populate SSIDs and PWDs if valid
@@ -1376,6 +1436,45 @@ void ESP_WiFiManager::handleWifi()
 }
 
 //////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** Handle the WLAN save form and redirect to WLAN config page again */
 void ESP_WiFiManager::handleWifiSave()
