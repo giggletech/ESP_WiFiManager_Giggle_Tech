@@ -1145,6 +1145,8 @@ void ESP_WiFiManager::handleRoot()
 
 
 
+bool switchState = false;  // Default state is off
+bool staticIpEnabled = false; // Initially, set to false
 
 
 
@@ -1244,12 +1246,6 @@ void ESP_WiFiManager::handleWifi()
 
 
   // I WANT THE SWTCHE HERE
-  page += "<br/>";
-  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
-  page += F("<input type=\"checkbox\" id=\"enableSwitch\" name=\"enableSwitch\">");
-  page += "<br/>";
-
-
 
 
 
@@ -1257,26 +1253,14 @@ void ESP_WiFiManager::handleWifi()
   page += FPSTR(WM_HTTP_FORM_START);
 
 
-  LOGDEBUG(F("SIDEWAYS TEST 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
-
-  if (server->hasArg("enableSwitch")) {
-      bool enableFeature = server->arg("enableSwitch") == "on"; // Check if the switch is turned on
-      if (enableFeature) {
-          LOGDEBUG(F("ON <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
-          Serial.println("SWTICH ON");
-            EEPROM.put(0, 1);
-            EEPROM.commit(); // Save changes to EEPROM
-          // Code to execute when the switch is turned on
-          // For example, you can set a flag or perform an action
-      } else {
-          LOGDEBUG(F("OFF <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
-          Serial.println("SWTICH OFF");
-          EEPROM.put(0, 0);
-          EEPROM.commit(); // Save changes to EEPROM
-          // Code to execute when the switch is turned off
-      }
+  page += "<br/>";
+  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
+  page += "<input type=\"checkbox\" id=\"enableSwitch2\" name=\"enableSwitch2\"";
+  if (staticIpEnabled) {
+      page += " checked";
   }
-
+  page += ">";
+  page += "<br/>";
 
 
   
@@ -1424,6 +1408,18 @@ void ESP_WiFiManager::handleWifi()
     page += "<br/>";
   }
 
+
+
+  LOGDEBUG(F("SIDEWAYS TEST 2 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
+  page += "<br/>";
+  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
+  page += "<input type=\"checkbox\" id=\"enableSwitch3\" name=\"enableSwitch3\"";
+  if (staticIpEnabled) {
+      page += " checked";
+  }
+  page += ">";
+  page += "<br/>";
+
   page += FPSTR(WM_HTTP_SCRIPT_NTP_HIDDEN);
 
   page += FPSTR(WM_HTTP_FORM_END);
@@ -1480,6 +1476,38 @@ void ESP_WiFiManager::handleWifi()
 void ESP_WiFiManager::handleWifiSave()
 {
   LOGDEBUG(F("WiFi save"));
+  LOGDEBUG(F("SIDEWAYS DEBUG <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
+  // --------------------------------------------------------------------------------------------- THIS GETS CALLED WHEN THE SAVE BUTTON IS PRESSED
+  /*bool enableFeature = server->arg("enableSwitch") == "on";
+  switchState = enableFeature;
+  EEPROM.put(0, switchState);
+  EEPROM.commit(); // Save changes to EEPROM
+*/
+    LOGDEBUG("Arguments received:");
+    for (uint8_t i = 0; i < server->args(); i++) {
+        LOGDEBUG(server->argName(i) + ": " + server->arg(i));
+    }
+
+  //staticIpEnabled = false;
+  staticIpEnabled = server->hasArg("enableSwitch2");
+  
+// Assuming you have a boolean variable named staticIpEnabled
+  if (staticIpEnabled == true) {
+      // Code to execute if static IP is enabled
+      Serial.println("Static IP is enabled.");
+      LOGDEBUG(F("------------------------------------------------Static IP"));
+      EEPROM.put(0, 0);
+      EEPROM.commit(); // Save changes to EEPROM
+      // ... Additional code ...
+  } else {
+      // Code to execute if static IP is not enabled
+      Serial.println("Static IP is not enabled.");
+      LOGDEBUG(F("--------------------------------------------DHCP."));
+      EEPROM.put(0, 1);
+      EEPROM.commit(); // Save changes to EEPROM
+      // ... Additional code ...
+  }
+
 
   //SAVE/connect here
   _ssid = server->arg("s").c_str();
@@ -1598,6 +1626,14 @@ void ESP_WiFiManager::handleWifiSave()
 }
 
 //////////////////////////////////////////
+
+
+
+
+
+
+
+
 
 /** Handle shut down the server page */
 void ESP_WiFiManager::handleServerClose()
