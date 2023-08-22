@@ -1276,8 +1276,10 @@ void ESP_WiFiManager::handleWifi()
 
   page += FPSTR(WM_FLDSET_START);
 
+
   page += "<br/>";
-  page += "<small>Power Cycle after changing DHCP/Static IP Setting</small>";
+  page += "<small>The following is for Static IP Use Only</small>";
+  //page += "<br/>";
   page += "<br/>";
   page += "<br/>";
   page += F("<label for=\"enableSwitch\">Use Static IP</label>");
@@ -1287,6 +1289,13 @@ void ESP_WiFiManager::handleWifi()
       page += " checked";
   }
   page += ">";
+  page += "<br/>";
+  page += "<br/>";
+  //page += "<br/>";
+  page += "<small>Fill in Static IP, Gateway, & Subnet</small>";
+  page += "<br/>";
+  page += "<br/>";
+  page += "<small>Power Cycle after changing DHCP/Static IP Setting</small>";
   page += "<br/>";
   page += "<br/>";
 
