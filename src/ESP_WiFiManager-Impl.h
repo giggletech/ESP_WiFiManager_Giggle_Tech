@@ -1122,7 +1122,7 @@ void ESP_WiFiManager::handleRoot()
   page += FPSTR(WM_HTTP_STYLE);
   page += _customHeadElement;
   page += FPSTR(WM_HTTP_HEAD_END);
-  page += "<h2>";
+  page += "<h2 style='text-align:center;'>";
   page += "GIGGLETECH";
 
   if (WiFi_SSID() != "")
@@ -1262,7 +1262,7 @@ void ESP_WiFiManager::handleWifi()
     page += "<br/>";
   }
 
-  page += "<small>*Hint: To reuse the saved WiFi credentials, leave SSID and PWD fields empty</small>";
+  page += "<br/>";
 
 
 
@@ -1270,8 +1270,6 @@ void ESP_WiFiManager::handleWifi()
 
 
   // I WANT THE SWTCHE HERE
-
-
 
 
   page += FPSTR(WM_HTTP_FORM_START);
@@ -1306,6 +1304,7 @@ void ESP_WiFiManager::handleWifi()
 
   char parLength[2];
 
+  page += "<br/>";
   page += FPSTR(WM_FLDSET_START);
 
 
@@ -1779,81 +1778,22 @@ void ESP_WiFiManager::handleInfo()
 
   page += F("<h3>Device Data</h3>");
   page += F("<table class=\"table\">");
-  page += F("<thead><tr><th>Name</th><th>Value</th></tr></thead><tbody><tr><td>Chip ID</td><td>");
-
-  page += F("0x");
-#ifdef ESP8266
-  page += String(ESP.getChipId(), HEX);   //ESP.getChipId();
-#else   //ESP32
-
-  page += String(ESP_getChipId(), HEX);   //ESP.getChipId();
-
-  page += F("</td></tr>");
-  page += F("<tr><td>Chip OUI</td><td>");
-  page += F("0x");
-  page += String(getChipOUI(), HEX);    //ESP.getChipId();
-
-  page += F("</td></tr>");
-  page += F("<tr><td>Chip Model</td><td>");
-  page += ESP.getChipModel();
-  page += F(" Rev");
-  page += ESP.getChipRevision();
-#endif
-
-  page += F("</td></tr>");
-  page += F("<tr><td>Flash Chip ID</td><td>");
-
-#ifdef ESP8266
-  page += String(ESP.getFlashChipId(), HEX);    //ESP.getFlashChipId();
-#else   //ESP32
-  // TODO
-  page += F("TODO");
-#endif
-
-  page += F("</td></tr>");
-  page += F("<tr><td>IDE Flash Size</td><td>");
-  page += ESP.getFlashChipSize();
-  page += F(" bytes</td></tr>");
-  page += F("<tr><td>Real Flash Size</td><td>");
-
-#ifdef ESP8266
-  page += ESP.getFlashChipRealSize();
-#else   //ESP32
-  // TODO
-  page += F("TODO");
-#endif
-
-  page += F(" bytes</td></tr>");
+  page += F("<thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>");
   page += F("<tr><td>Access Point IP</td><td>");
   page += WiFi.softAPIP().toString();
   page += F("</td></tr>");
   page += F("<tr><td>Access Point MAC</td><td>");
   page += WiFi.softAPmacAddress();
   page += F("</td></tr>");
-
-  page += F("<tr><td>SSID</td><td>");
-  page += WiFi_SSID();
-  page += F("</td></tr>");
-
   page += F("<tr><td>Station IP</td><td>");
   page += WiFi.localIP().toString();
   page += F("</td></tr>");
-
   page += F("<tr><td>Station MAC</td><td>");
   page += WiFi.macAddress();
   page += F("</td></tr>");
   page += F("</tbody></table>");
 
   page += FPSTR(WM_FLDSET_END);
-
-#if USE_AVAILABLE_PAGES
-  page += FPSTR(WM_FLDSET_START);
-
-  page += FPSTR(WM_HTTP_AVAILABLE_PAGES);
-
-  page += FPSTR(WM_FLDSET_END);
-#endif
-
 
   page += FPSTR(WM_HTTP_END);
 
