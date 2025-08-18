@@ -675,6 +675,8 @@ void ESP_WiFiManager::setWifiStaticIP()
   else
   {
     LOGWARN(F("Can't use Custom STA IP/GW/Subnet"));
+    // Ensure DHCP is active when not using static IP
+    WiFi.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
   }
 
 #else
@@ -685,6 +687,11 @@ void ESP_WiFiManager::setWifiStaticIP()
     WiFi.config(_WiFi_STA_IPconfig._sta_static_ip, _WiFi_STA_IPconfig._sta_static_gw, _WiFi_STA_IPconfig._sta_static_sn);
 
     LOGWARN1(F("Custom STA IP/GW/Subnet : "), WiFi.localIP());
+  }
+  else
+  {
+    // Ensure DHCP is active when not using static IP
+    WiFi.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
   }
 
 #endif
@@ -726,8 +733,22 @@ int ESP_WiFiManager::connectWifi(const String& ssid, const String& pass)
     //fix for auto connect racing issue, to avoid resetSettings()
     if (WiFi.status() == WL_CONNECTED)
     {
-      LOGWARN(F("Already connected. Bailing out."));
-      return WL_CONNECTED;
+      // If we are just updating IP parameters/mode (no new SSID),
+      // disconnect so the new config can take effect immediately.
+      if (ssid == "")
+      {
+        LOGWARN(F("Connected. Reconfiguring IP by reconnecting."));
+#ifdef ESP8266
+        WiFi.disconnect(false);
+#else
+        WiFi.disconnect(false, false);
+#endif
+      }
+      else
+      {
+        LOGWARN(F("Already connected. Bailing out."));
+        return WL_CONNECTED;
+      }
     }
 
     if (ssid != "")
@@ -1254,7 +1275,15 @@ void ESP_WiFiManager::handleWifi()
 
 
   int eeprom_read;
+  EEPROM.begin(4);
   EEPROM.get(0, eeprom_read);
+  if ((eeprom_read != 0) && (eeprom_read != 1))
+  {
+    // Default to DHCP on first run or invalid value
+    eeprom_read = 1;
+    EEPROM.put(0, 1);
+    EEPROM.commit();
+  }
 
 
 
@@ -1282,7 +1311,7 @@ void ESP_WiFiManager::handleWifi()
   //page += "<br/>";
   page += "<br/>";
   page += "<br/>";
-  page += F("<label for=\"enableSwitch\">Use Static IP</label>");
+  page += F("<label for=\"enableSwitch2\">Use Static IP</label>");
   page += "<input type=\"checkbox\" id=\"enableSwitch2\" name=\"enableSwitch2\"";
   
   if (eeprom_read == 0) {
@@ -1489,6 +1518,7 @@ void ESP_WiFiManager::handleWifiSave()
 {
   LOGDEBUG(F("WiFi save"));
   LOGDEBUG(F("SIDEWAYS DEBUG <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"));
+  EEPROM.begin(4);
   // --------------------------------------------------------------------------------------------- THIS GETS CALLED WHEN THE SAVE BUTTON IS PRESSED
   /*bool enableFeature = server->arg("enableSwitch") == "on";
   switchState = enableFeature;
@@ -1567,49 +1597,66 @@ void ESP_WiFiManager::handleWifiSave()
     LOGDEBUG2(F("Parameter and value :"), _params[i]->getID(), value);
   }
 
-  if (server->arg("ip") != "")
+  if(staticIpEnabled)
   {
-    String ip = server->arg("ip");
-    optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_ip, ip.c_str());
-
-    LOGDEBUG1(F("New Static IP ="), _WiFi_STA_IPconfig._sta_static_ip.toString());
+    if (server->arg("ip") != "")
+    {
+      String ip = server->arg("ip");
+      optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_ip, ip.c_str());
+  
+      LOGDEBUG1(F("New Static IP ="), _WiFi_STA_IPconfig._sta_static_ip.toString());
+    }
+  
+    if (server->arg("gw") != "")
+    {
+      String gw = server->arg("gw");
+      optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_gw, gw.c_str());
+  
+      LOGDEBUG1(F("New Static Gateway ="), _WiFi_STA_IPconfig._sta_static_gw.toString());
+    }
+  
+    if (server->arg("sn") != "")
+    {
+      String sn = server->arg("sn");
+      optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_sn, sn.c_str());
+  
+      LOGDEBUG1(F("New Static Netmask ="), _WiFi_STA_IPconfig._sta_static_sn.toString());
+    }
   }
-
-  if (server->arg("gw") != "")
+  else
   {
-    String gw = server->arg("gw");
-    optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_gw, gw.c_str());
-
-    LOGDEBUG1(F("New Static Gateway ="), _WiFi_STA_IPconfig._sta_static_gw.toString());
-  }
-
-  if (server->arg("sn") != "")
-  {
-    String sn = server->arg("sn");
-    optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_sn, sn.c_str());
-
-    LOGDEBUG1(F("New Static Netmask ="), _WiFi_STA_IPconfig._sta_static_sn.toString());
+    _WiFi_STA_IPconfig._sta_static_ip = IPAddress(0, 0, 0, 0);
+    _WiFi_STA_IPconfig._sta_static_gw = IPAddress(0, 0, 0, 0);
+    _WiFi_STA_IPconfig._sta_static_sn = IPAddress(0, 0, 0, 0);
   }
 
 #if USE_CONFIGURABLE_DNS
-
+  
   //*****  Added for DNS Options *****
-  if (server->arg("dns1") != "")
+  if (staticIpEnabled)
   {
-    String dns1 = server->arg("dns1");
-    optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_dns1, dns1.c_str());
-
-    LOGDEBUG1(F("New Static DNS1 ="), _WiFi_STA_IPconfig._sta_static_dns1.toString());
+    if (server->arg("dns1") != "")
+    {
+      String dns1 = server->arg("dns1");
+      optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_dns1, dns1.c_str());
+  
+      LOGDEBUG1(F("New Static DNS1 ="), _WiFi_STA_IPconfig._sta_static_dns1.toString());
+    }
+  
+    if (server->arg("dns2") != "")
+    {
+      String dns2 = server->arg("dns2");
+      optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_dns2, dns2.c_str());
+  
+      LOGDEBUG1(F("New Static DNS2 ="), _WiFi_STA_IPconfig._sta_static_dns2.toString());
+    }
   }
-
-  if (server->arg("dns2") != "")
+  else
   {
-    String dns2 = server->arg("dns2");
-    optionalIPFromString(&_WiFi_STA_IPconfig._sta_static_dns2, dns2.c_str());
-
-    LOGDEBUG1(F("New Static DNS2 ="), _WiFi_STA_IPconfig._sta_static_dns2.toString());
+    _WiFi_STA_IPconfig._sta_static_dns1 = IPAddress(0, 0, 0, 0);
+    _WiFi_STA_IPconfig._sta_static_dns2 = IPAddress(0, 0, 0, 0);
   }
-
+  
   //*****  End added for DNS Options *****
 #endif
 
