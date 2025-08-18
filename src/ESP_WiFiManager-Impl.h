@@ -1066,10 +1066,9 @@ void ESP_WiFiManager::setBreakAfterConfig(bool shouldBreak)
 
 void ESP_WiFiManager::reportStatus(String &page)
 {
-  page += FPSTR(WM_HTTP_SCRIPT_NTP_MSG);
-
   if (WiFi_SSID() != "")
   {
+    page += FPSTR(WM_HTTP_SCRIPT_NTP_MSG);
     page += F("Configured to connect to access point <b>");
     page += WiFi_SSID();
 
@@ -1086,10 +1085,7 @@ void ESP_WiFiManager::reportStatus(String &page)
       page += F(" but not currently connected</b> to network.");
     }
   }
-  else
-  {
-    page += F("No network currently configured.");
-  }
+  // No network configured - don't show anything
 }
 
 //////////////////////////////////////////
@@ -1127,7 +1123,7 @@ void ESP_WiFiManager::handleRoot()
   page += _customHeadElement;
   page += FPSTR(WM_HTTP_HEAD_END);
   page += "<h2>";
-  page += _apName;
+  page += "GIGGLETECH";
 
   if (WiFi_SSID() != "")
   {
@@ -1146,9 +1142,16 @@ void ESP_WiFiManager::handleRoot()
 
   page += "</h2>";
   page += FPSTR(WM_HTTP_PORTAL_OPTIONS);
-  page += F("<div class=\"msg\">");
-  reportStatus(page);
-  page += F("</div>");
+  
+  // Only add status div if there's content to show
+  String statusContent = "";
+  reportStatus(statusContent);
+  if (statusContent.length() > 0) {
+    page += F("<div class=\"msg\">");
+    page += statusContent;
+    page += F("</div>");
+  }
+  
   page += FPSTR(WM_HTTP_END);
 
   server->send(200, "text/html", page);
@@ -1851,8 +1854,7 @@ void ESP_WiFiManager::handleInfo()
   page += FPSTR(WM_FLDSET_END);
 #endif
 
-  page += F("<p/>More information about ESP_WiFiManager at");
-  page += F("<p/><a href=\"https://github.com/khoih-prog/ESP_WiFiManager\">https://github.com/khoih-prog/ESP_WiFiManager</a>");
+
   page += FPSTR(WM_HTTP_END);
 
   server->send(200, "text/html", page);
