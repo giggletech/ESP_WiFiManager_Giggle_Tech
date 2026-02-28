@@ -424,6 +424,8 @@ void ESP_WiFiManager::setupConfigPortal()
   server->begin(); // Web server start
 
   LOGWARN(F("HTTP server started"));
+  // Always print version to Serial so you can confirm this firmware is loaded
+  Serial.println(ESP_WIFIMANAGER_VERSION);
 }
 
 //////////////////////////////////////////
@@ -1209,6 +1211,9 @@ void ESP_WiFiManager::handleWifi()
 
   //  KH, New
   numberOfNetworks = scanWifiNetworks(&networkIndices);
+  // Defensive: avoid using networkIndices if allocation failed
+  if (numberOfNetworks > 0 && networkIndices == NULL)
+    numberOfNetworks = 0;
 
   //Print list of WiFi networks that were found in earlier scan
   if (numberOfNetworks == 0)
@@ -1302,7 +1307,7 @@ void ESP_WiFiManager::handleWifi()
   page.replace("[[pwd1]]",  _pass1 );
 #endif
 
-  char parLength[2];
+  char parLength[8];  // enough for "%d" of typical param lengths (e.g. 64, 128)
 
   page += "<br/>";
   page += FPSTR(WM_FLDSET_START);
@@ -1361,7 +1366,7 @@ void ESP_WiFiManager::handleWifi()
       pitem.replace("{i}", _params[i]->getID());
       pitem.replace("{n}", _params[i]->getID());
       pitem.replace("{p}", _params[i]->getPlaceholder());
-      snprintf(parLength, 2, "%d", _params[i]->getValueLength());
+      snprintf(parLength, sizeof(parLength), "%d", _params[i]->getValueLength());
       pitem.replace("{l}", parLength);
       pitem.replace("{v}", _params[i]->getValue());
       pitem.replace("{c}", _params[i]->getCustomHTML());

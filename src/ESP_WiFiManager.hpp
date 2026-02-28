@@ -71,13 +71,13 @@
 
 ////////////////////////////////////////////////////
 
-#define ESP_WIFIMANAGER_VERSION           "ESP_WiFiManager v1.12.1"
+#define ESP_WIFIMANAGER_VERSION           "ESP_WiFiManager v1.12.2 (Giggle)"
 
 #define ESP_WIFIMANAGER_VERSION_MAJOR     1
 #define ESP_WIFIMANAGER_VERSION_MINOR     12
-#define ESP_WIFIMANAGER_VERSION_PATCH     1
+#define ESP_WIFIMANAGER_VERSION_PATCH     2
 
-#define ESP_WIFIMANAGER_VERSION_INT       1012001
+#define ESP_WIFIMANAGER_VERSION_INT       1012002
 
 ////////////////////////////////////////////////////
 
