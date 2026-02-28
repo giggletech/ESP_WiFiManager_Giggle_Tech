@@ -1043,6 +1043,7 @@ void setup() // ----------------------------------------------------------------
     Serial.print(ssid);
     Serial.print(F(", PWD = "));
     Serial.println(password);
+    // Config page does a blocking WiFi scan (several seconds on ESP8266); if "Configuration" sometimes doesn't load, refresh the browser once.
     Serial.println("Turn on LED");
     digitalWrite(PIN_LED, LED_ON); // turn the LED on by making the voltage LOW to tell us we are in configuration mode.
     analogWrite(led_external, 255);

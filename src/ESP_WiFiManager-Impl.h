@@ -1189,6 +1189,11 @@ void ESP_WiFiManager::handleWifi()
   // Disable _configPortalTimeout when someone accessing Portal to give some time to config
   _configPortalTimeout = 0;   //KH
 
+#ifdef ESP8266
+  // Config page does a blocking WiFi scan (3–5+ s) and builds a large HTML page — increase client timeout so the browser doesn't drop the connection and the page doesn't appear to hang.
+  server->client().setTimeout(15);
+#endif
+
   server->sendHeader(FPSTR(WM_HTTP_CACHE_CONTROL), FPSTR(WM_HTTP_NO_STORE));
 
 #if USING_CORS_FEATURE
@@ -1210,6 +1215,7 @@ void ESP_WiFiManager::handleWifi()
   page += F("<h2>Configuration</h2>");
 
   //  KH, New
+  yield();  // Let TCP/WiFi run before blocking scan so the connection is less likely to drop and the page doesn't appear to hang
   numberOfNetworks = scanWifiNetworks(&networkIndices);
   // Defensive: avoid using networkIndices if allocation failed
   if (numberOfNetworks > 0 && networkIndices == NULL)
