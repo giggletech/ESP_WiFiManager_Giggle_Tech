@@ -1180,6 +1180,7 @@ void setup() // ----------------------------------------------------------------
     Serial.print(">>> IP Address: ");
     Serial.print(WiFi.localIP());
     Serial.println(" <<<");
+    Serial.println("(If http://giggletech.local/ doesn't work, use the IP above — common on Windows)");
     Serial.println("");
     Serial.println("***");
     Serial.println("***");
@@ -1189,11 +1190,11 @@ void setup() // ----------------------------------------------------------------
     Serial.println(ESP_wifiManager.getStatus(WiFi.status()));
 
 
-  // Set up mDNS responder:
-  // - first argument is the domain name, in this example
-  //   the fully-qualified domain name is "esp8266.local"
-  // - second argument is the IP address to advertise
-  //   we send our IP address on the WiFi network
+  // Set up mDNS responder (giggletech.local)
+  // On Windows, .local often does not resolve — use the IP address below or install Bonjour.
+#if defined(ESP8266)
+  WiFi.hostname("giggletech");  // Match mDNS name; helps router and some clients
+#endif
   if (!MDNS.begin("giggletech")) {
     Serial.println("Error setting up MDNS responder!");
     while (1) {
